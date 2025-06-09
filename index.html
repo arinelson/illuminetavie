@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="fr-FRA">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voyage éclairé - Des produits pour votre foi</title>
+
+    <!-- OTIMIZAÇÃO: Script com 'defer' para não bloquear o carregamento da página -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+
+    <!-- OTIMIZAÇÃO: Pré-conexão com o servidor de fontes para acelerar o carregamento -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* Habilita a rolagem suave na página inteira */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Definindo as fontes customizadas para o Tailwind */
+        body {
+            font-family: 'Lato', sans-serif;
+            /* Fundo gradiente que transita do amanhecer para a noite */
+            background: linear-gradient(to bottom, #FFDAB9, #FFC0CB, #87CEEB, #191970, #000033);
+            color: #333;
+            overflow-x: hidden; /* Previne scroll horizontal */
+            /* CORREÇÃO FOUC: Inicia o corpo invisível e prepara uma transição suave */
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        body.popup-open {
+            overflow: hidden; /* Previne scroll quando o pop-up está aberto */
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Animação de pulsação com EFEITO NEON */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+                text-shadow: 0 0 4px rgba(255, 255, 255, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+                text-shadow: 0 0 8px rgba(255, 255, 255, 1);
+            }
+        }
+
+        .btn-pulse {
+            animation: pulse 2.5s infinite;
+        }
+
+        /* Estilos para a linha do tempo */
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        /* Esconder a linha do tempo em telas menores */
+        @media (max-width: 768px) {
+            .timeline::before {
+                display: none;
+            }
+            .timeline-item {
+                width: 100%;
+                margin-bottom: 2rem;
+            }
+            .timeline-item:nth-child(even) .timeline-content,
+            .timeline-item:nth-child(odd) .timeline-content {
+                transform: none; /* Reset transform on mobile */
+                text-align: left; /* Align all text to left */
+            }
+        }
+        
+        /* Animações de fade-in e slide-in */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Estilo para as estrelas */
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 5s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        /* Estilo para o cursor da animação de digitação */
+        .typewriter-cursor {
+            display: inline-block;
+            background-color: white;
+            width: 4px;
+            height: 1em;
+            margin-left: 4px;
+            animation: blink 1s infinite;
+            vertical-align: bottom;
+        }
+
+        /* Transição suave para a mudança de cor */
+        #typewriter-text {
+            transition: color 0.5s ease-in-out;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Estilos para a Seta Neon Fixa (Desktop) */
+        #fixed-neon-arrow {
+            transition: opacity 0.5s ease-out;
+            animation: bounce-subtle 2.5s infinite;
+        }
+
+        #fixed-neon-arrow.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #fixed-neon-arrow svg {
+            animation: neon-glow 2.5s infinite alternate;
+        }
+
+        @keyframes neon-glow {
+            from {
+                filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 10px rgba(59, 130, 246, 0.7));
+            }
+            to {
+                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 1)) drop-shadow(0 0 20px rgba(59, 130, 246, 1));
+            }
+        }
+
+        @keyframes bounce-subtle {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+            50% { transform: translate(-50%, -50%) translateY(10px); }
+        }
+        
+        /* Estilos para o pop-up */
+        @keyframes popup-show {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        #popup-content {
+            animation: popup-show 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    
+    <!-- Pop-up de Produto Aleatório -->
+    <div id="product-popup" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <!-- Fundo do pop-up -->
+        <div id="popup-overlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        
+        <!-- Conteúdo do pop-up -->
+        <div id="popup-content" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md text-center p-6 md:p-8 overflow-hidden">
+            <button id="popup-close-btn" class="absolute top-2 right-3 text-gray-400 hover:text-gray-800 text-3xl">&times;</button>
+            <p class="text-sm font-semibold text-orange-500 mb-2">Nous avons trouvé quelque chose de spécial pour vous !!</p>
+            <img id="popup-img" src="" alt="Produto em destaque" class="w-full h-48 object-cover rounded-lg mb-4">
+            <h3 id="popup-title" class="text-2xl font-bold font-serif text-gray-800 mb-2"></h3>
+            <p id="popup-desc" class="text-gray-600 mb-6 text-sm"></p>
+            
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a id="popup-link" href="#" class="w-full bg-gradient-to-br from-amber-400 to-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-transform duration-300">
+                    Je veux cette bénédiction
+                </a>
+                <button id="popup-continue-btn" class="w-full bg-gray-200 text-gray-700 font-bold py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors">
+                    Continuer à regarder
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Seção de Estrelas (no fundo) -->
+    <div id="star-container" class="fixed top-0 left-0 w-full h-full z-0 pointer-events-none"></div>
+
+    <!-- Seta Neon Fixa para Desktop -->
+    <div id="fixed-neon-arrow" class="hidden md:block fixed top-1/2 left-1/2 z-50">
+         <svg class="w-10 h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+    </div>
+
+    <div id="page-content" class="relative z-10">
+        <!-- Seção Herói -->
+        <header id="header" class="h-screen min-h-[700px] flex items-center justify-center text-center text-white p-4" style="background-image: url('https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+            <div class="relative z-10 fade-in-section is-visible">
+                <!-- Imagem do Logo -->
+                <img src="https://i.imgur.com/KldYFkC.jpeg" alt="Logo Luz Crua" class="w-32 h-32 md:w-40 md:h-40 mx-auto mb-6 rounded-full shadow-lg border-2 border-white/50">
+                
+                <!-- Título com Animação -->
+                <h1 class="text-5xl md:text-7xl font-black mb-4 tracking-tight text-white">
+                    Illuminez <span id="typewriter-text"></span><span class="typewriter-cursor"></span>
+                </h1>
+                <p class="text-lg md:text-2xl font-light max-w-3xl mx-auto">Des produits qui inspirent et construisent votre cheminement quotidien de foi.</p>
+
+                <!-- Botão para rolar para os produtos -->
+                <a href="#products" class="mt-8 inline-block border-2 border-white/70 text-white/90 font-semibold py-2 px-6 rounded-full hover:bg-white hover:text-gray-800 transition-colors duration-300">
+                    voir plus
+                </a>
+            </div>
+        </header>
+
+        <!-- Seção de Produtos com ID para ancoragem -->
+        <main id="products" class="container mx-auto px-6 py-20">
+            <!-- Linha do Tempo -->
+            <div class="relative timeline">
+
+                <!-- Item 1: Bíblia de Estudo -->
+                <div class="timeline-item md:w-1/2 md:pr-8 md:mr-auto mb-12 fade-in-section">
+                    <div class="relative timeline-content bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-200/50 transform md:hover:scale-105 transition-transform duration-300">
+                        <img src="https://m.media-amazon.com/images/I/61UOJ7gTwJL._SY342_.jpg" alt="Bíblia de Estudo" class="rounded-lg mb-6 w-full h-auto object-cover" loading="lazy">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-3">Bíblia Ave-Maria: Uma Nova Experiência de Leitura e Oração</h2>
+                        <p class="text-gray-600 mb-6">Sinta a Palavra de Deus de uma forma única. A confiança da tradução Ave-Maria unida à beleza de 57 ilustrações coloridas que inspiram e emocionam. Ideal para seu devocional diário e para criar um legado de fé em sua família, com páginas especiais para anotações e orações.</p>
+                        <!-- Contagem regressiva -->
+                        <div class="countdown-timer text-center bg-red-100/80 text-red-700 font-bold p-2 rounded-lg mb-6 shadow-inner"></div>
+                        <a href="https://amzn.to/4kuY4MT" target="_blank" class="btn-pulse mx-auto block text-white font-bold py-4 px-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 transition-all duration-300 w-40 h-40 flex items-center justify-center text-center text-lg leading-tight">QUERO ILUMINAR <br>MINHA FÉ</a>
+                        <!-- Seta para Mobile -->
+                        <div class="mt-6 flex justify-center md:hidden">
+                            <svg class="w-8 h-8 text-gray-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 2: Colar Cruz -->
+                <div class="timeline-item md:w-1/2 md:pl-8 md:ml-auto mb-12 fade-in-section">
+                    <div class="timeline-content bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-200/50 transform md:hover:scale-105 transition-transform duration-300 md:text-right">
+                        <img src="https://m.media-amazon.com/images/I/81GKqcrveIL._AC_SY879_.jpg" alt="Colar com Cruz" class="rounded-lg mb-6 w-full h-auto object-cover" loading="lazy">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-3">Decoração com Propósito: As 3 Etapas da Fé</h2>
+                        <p class="text-gray-600 mb-6">Decore com a certeza da providência Divina. Este kit com 3 quadros traz a sequência poderosa da fé: Ore, Espere e Creia. Com design rústico e acolhedor, é o toque de inspiração que faltava em sua casa ou escritório para te motivar a cada novo dia. O lembrete visual que você precisava para perseverar.</p>
+                        <!-- Contagem regressiva -->
+                        <div class="countdown-timer text-center bg-red-100/80 text-red-700 font-bold p-2 rounded-lg mb-6 shadow-inner"></div>
+                         <a href="https://amzn.to/3ZDfGhd" target="_blank" class="btn-pulse mx-auto block md:ml-auto md:mr-0 text-white font-bold py-4 px-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 transition-all duration-300 w-40 h-40 flex items-center justify-center text-center text-lg leading-tight">Abençoar<br>Meu Dia</a>
+                        <!-- Seta para Mobile -->
+                        <div class="mt-6 flex justify-center md:hidden">
+                            <svg class="w-8 h-8 text-gray-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Item 3: Devocional Diário -->
+                <div class="timeline-item md:w-1/2 md:pr-8 md:mr-auto mb-12 fade-in-section">
+                    <div class="timeline-content bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-200/50 transform md:hover:scale-105 transition-transform duration-300">
+                        <img src="https://m.media-amazon.com/images/I/61LyhzJjcNL._AC_SX679_.jpg" loading="lazy" alt="Devocional Diário" class="rounded-lg mb-6 w-full h-auto object-cover">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-3">Seu Escudo de Fé: Terço de São Bento em Hematita</h2>
+                        <p class="text-gray-600 mb-6">Coloque suas intenções e sua fé nas contas deste terço especial. A pedra Hematita, conhecida por sua força, une-se à Medalha de São Bento para te dar mais confiança em sua caminhada. Um convite para conversar com a Virgem Maria e sentir-se seguro sob um manto de proteção. Perfeito para o dia a dia e um presente que evangeliza e cuida.</p>
+                        <!-- Contagem regressiva -->
+                        <div class="countdown-timer text-center bg-red-100/80 text-red-700 font-bold p-2 rounded-lg mb-6 shadow-inner"></div>
+                        <a href="https://amzn.to/43We0Rt" target="_blank" class="btn-pulse mx-auto block text-white font-bold py-4 px-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 transition-all duration-300 w-40 h-40 flex items-center justify-center text-center text-lg leading-tight">Ver Oferta<br>de Fé</a>
+                        <!-- Seta para Mobile -->
+                        <div class="mt-6 flex justify-center md:hidden">
+                            <svg class="w-8 h-8 text-gray-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 4: Quadro Decorativo (Último item, sem seta) -->
+                 <div class="timeline-item md:w-1/2 md:pl-8 md:ml-auto mb-12 fade-in-section">
+                    <div class="timeline-content bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-200/50 transform md:hover:scale-105 transition-transform duration-300 md:text-right">
+                        <img src="https://m.media-amazon.com/images/I/612Qpj8bD6L._AC_SX679_.jpg" loading="lazy" alt="Quadro com Versículo" class="rounded-lg mb-6 w-full h-auto object-cover">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-3">Vela 7 Dias de Santa Rita: A Chama das Causas Impossíveis</h2>
+                        <p class="text-gray-600 mb-6">Para aquela causa que parece impossível, acenda uma chama de esperança. Esta vela de 7 dias é dedicada a Santa Rita de Cássia, a padroeira dos desesperados. Mantenha sua fé acesa por uma semana inteira, fortalecendo seu pedido com a oração que a acompanha. Feita para uma queima limpa e pura, digna da sua devoção.</p>
+                        <!-- Contagem regressiva -->
+                        <div class="countdown-timer text-center bg-red-100/80 text-red-700 font-bold p-2 rounded-lg mb-6 shadow-inner"></div>
+                         <a href="https://amzn.to/4mVlBsg" target="_blank" class="btn-pulse mx-auto block md:ml-auto md:mr-0 text-white font-bold py-4 px-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 transition-all duration-300 w-40 h-40 flex items-center justify-center text-center text-lg leading-tight">Abençoar<br>Meu Dia</a>
+                    </div>
+                </div>
+
+                 <!-- Item 5: Devocional Diário -->
+                <div class="timeline-item md:w-1/2 md:pr-8 md:mr-auto mb-12 fade-in-section">
+                    <div class="timeline-content bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-200/50 transform md:hover:scale-105 transition-transform duration-300">
+                        <img src="https://down-br.img.susercontent.com/file/sg-11134201-7rbli-m5f07jqv43gg1d.webp" loading="lazy" alt="Devocional Diário" class="rounded-lg mb-6 w-full h-auto object-cover">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-3">Kit 3 Placas Quadros Decorativos para Sala Quarto Leão De Judá Jesus</h2>
+                        <p class="text-gray-600 mb-6">Nossos quadros são impressos em Vinil Semi Brilho de alta qualidade, utilizamos MDF com espessura de 3mm, para que tenha um produto de alta qualidade e resistente.
+                                                    Não precisa de moldura, pois o acabamento das bordas é feito com a própria imagem, para uma visão super realista e com boa profundidade do produto.</p>
+                        <!-- Contagem regressiva -->
+                        <div class="countdown-timer text-center bg-red-100/80 text-red-700 font-bold p-2 rounded-lg mb-6 shadow-inner"></div>
+                        <a href="https://s.shopee.com.br/3VY0xw7ZtS" target="_blank" class="btn-pulse mx-auto block text-white font-bold py-4 px-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 transition-all duration-300 w-40 h-40 flex items-center justify-center text-center text-lg leading-tight">Ver Oferta<br>de Fé</a>
+                        <!-- Seta para Mobile -->
+                        <div class="mt-6 flex justify-center md:hidden">
+                            <svg class="w-8 h-8 text-gray-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                  <!-- Item 6: Quadro Decorativo (Último item, sem seta) -->
+                 <div class="timeline-item md:w-1/2 md:pl-8 md:ml-auto mb-12 fade-in-section">
+                    <div class="timeline-content bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-200/50 transform md:hover:scale-105 transition-transform duration-300 md:text-right">
+                        <img src="https://down-br.img.susercontent.com/file/sg-11134201-7rbm9-lmewvkb7yi5532.webp" loading="lazy" alt="Quadro com Versículo" class="rounded-lg mb-6 w-full h-auto object-cover">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-3">25 Terços de Pérola Tradicional Branco</h2>
+                        <p class="text-gray-600 mb-6">O Terço de Pérola Tradicional é totalmente artesanal, passa pelo processo de confecção manual tendo a garantia de que o produto foi feito com muito zelo durante a confecção. Tem contas de pérola e sua estrutura banhada a prata.
+                                                        Disponível em diversas cores e a tonalidade pode variar de acordo com o lote. Faz parte do nosso catálogo de produtos exclusivos da SJO.
+                                                        É uma das diversas opções em terços disponíveis na loja virtual.
+                                                        Medidas do Produto: Tamanho: 26,5 cm. Tamanho do Crucifixo: 1,8 cm de altura x 1 cm de largura. Dimensões Aproximadas.</p>
+                        <!-- Contagem regressiva -->
+                        <div class="countdown-timer text-center bg-red-100/80 text-red-700 font-bold p-2 rounded-lg mb-6 shadow-inner"></div>
+                         <a href="https://s.shopee.com.br/5fcogPnCMv" target="_blank" class="btn-pulse mx-auto block md:ml-auto md:mr-0 text-white font-bold py-4 px-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 transition-all duration-300 w-40 h-40 flex items-center justify-center text-center text-lg leading-tight">Abençoar<br>Meu Dia</a>
+                    </div>
+                </div>
+
+                 <!-- Item 7: Devocional Diário -->
+                <div class="timeline-item md:w-1/2 md:pr-8 md:mr-auto mb-12 fade-in-section">
+                    <div class="timeline-content bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-200/50 transform md:hover:scale-105 transition-transform duration-300">
+                        <img src="https://down-br.img.susercontent.com/file/sg-11134201-7rbkb-llti0hqe0opv81.webp" loading="lazy" alt="Devocional Diário" class="rounded-lg mb-6 w-full h-auto object-cover">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-3">Bíblia Sagrada ACF Letra Grande Leitura Perfeita | Capa Luxo Marrom Cruz - Thomas Nelson Brasil</h2>
+                        <p class="text-gray-600 mb-6">Para desenvolver um relacionamento íntimo com Deus, nada melhor do que se aprofundar no estudo de sua Palavra.No entanto, essa tarefa fica difícil quando temos em mãos uma Bíblia com texto de leitura cansativa.
+                                                        Para solucionar esse problema, apresentamos as bíblias Leitura Perfeita, pensadas especialmente para você que deseja ler as Escrituras com conforto sem pagar mais caro por isso.
+                                                        A fonte usada nesta Bíblia foi desenvolvida especialmente para a Thomas Nelson Brasil. O design é inspirado na Almeida Corrigida Fiel (ACF), conhecida por ser uma tradução clássica que preserva toda a tradição de João Ferreira de Almeida.
+                                                        O objetivo dos criadores da Fonte Leitura Perfeita foi refletir esse rico legado de ter um texto fiel aos originais, embasado nos manuscritos mais confiáveis, ao mesmo tempo em que integra os melhores avanços em tipografia de bíblias modernas.
+                                                        O resultado é uma fonte exclusiva, clara e legível em qualquer tamanho e que preserva toda a história da Almeida Corrigida.</p>
+                        <!-- Contagem regressiva -->
+                        <div class="countdown-timer text-center bg-red-100/80 text-red-700 font-bold p-2 rounded-lg mb-6 shadow-inner"></div>
+                        <a href="https://s.shopee.com.br/AUi4ByMuAA" target="_blank" class="btn-pulse mx-auto block text-white font-bold py-4 px-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 transition-all duration-300 w-40 h-40 flex items-center justify-center text-center text-lg leading-tight">Ver Oferta<br>de Fé</a>
+                        <!-- Seta para Mobile -->
+                        <div class="mt-6 flex justify-center md:hidden">
+                            <svg class="w-8 h-8 text-gray-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Rodapé Discreto -->
+        <footer id="footer" class="relative z-20 text-center py-8 px-4 text-sm">
+            <p class="text-white/60 mb-3">
+                Idealizado por <a href="https://wa.me/5582987125315" target="_blank" class="font-semibold text-white/80 hover:text-white underline">Arinelson Santos</a>
+            </p>
+            <a href="https://wa.me/5582987125315?text=Ol%C3%A1%21+Gostaria+de+saber+mais+sobre+a+cria%C3%A7%C3%A3o+de+p%C3%A1ginas+como+a+Jornada+Iluminada." target="_blank" class="inline-block border border-white/40 text-white/70 font-semibold py-2 px-5 rounded-full hover:bg-white/10 transition-colors duration-300 text-xs">
+                Quer uma página assim? Fale comigo
+            </a>
+        </footer>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // CORREÇÃO FOUC: Torna o corpo visível após o carregamento
+            document.body.style.opacity = '1';
+
+            // Lógica para animação de fade-in ao rolar
+            const sections = document.querySelectorAll('.fade-in-section');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Lógica para criar estrelas no fundo
+            const starContainer = document.getElementById('star-container');
+            const numStars = 150;
+            for (let i = 0; i < numStars; i++) {
+                let star = document.createElement('div');
+                star.className = 'star';
+                let size = Math.random() * 3;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                star.style.animationDuration = `${(Math.random() * 5) + 3}s`;
+                starContainer.appendChild(star);
+            }
+
+            // Lógica da Contagem Regressiva
+            const timers = document.querySelectorAll('.countdown-timer');
+            timers.forEach(timer => {
+                const randomHours = Math.floor(Math.random() * (24 - 2 + 1)) + 2;
+                const endTime = new Date().getTime() + randomHours * 60 * 60 * 1000;
+                const interval = setInterval(() => {
+                    const now = new Date().getTime();
+                    const distance = endTime - now;
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    if (distance < 0) {
+                        clearInterval(interval);
+                        timer.innerHTML = "Oferta Encerrada!";
+                        timer.classList.remove('text-red-700');
+                        timer.classList.add('text-gray-500');
+                    } else {
+                        timer.innerHTML = `<span>A oferta termina em: </span><strong>${hours}h ${minutes}m ${seconds}s</strong>`;
+                    }
+                }, 1000);
+            });
+
+            // Lógica da Animação de Digitação com Cores
+            const typewriterElement = document.getElementById('typewriter-text');
+            const words = ['ton chemin', 'ta vie', 'ta foi'];
+            const colors = ['#FFD700', '#FFB6C1', '#87CEFA']; // Dourado, Rosa, Azul
+            let wordIndex = 0;
+            let charIndex = 0;
+            let isDeleting = false;
+
+            function type() {
+                const currentWord = words[wordIndex];
+                let displayText = '';
+                if (isDeleting) {
+                    displayText = currentWord.substring(0, charIndex - 1);
+                    charIndex--;
+                } else {
+                    displayText = currentWord.substring(0, charIndex + 1);
+                    charIndex++;
+                }
+                typewriterElement.textContent = displayText;
+                let typeSpeed = isDeleting ? 100 : 200;
+                if (!isDeleting && charIndex === currentWord.length) {
+                    typeSpeed = 2000;
+                    isDeleting = true;
+                } else if (isDeleting && charIndex === 0) {
+                    isDeleting = false;
+                    wordIndex = (wordIndex + 1) % words.length;
+                    typewriterElement.style.color = colors[wordIndex];
+                    typeSpeed = 500;
+                }
+                setTimeout(type, typeSpeed);
+            }
+            typewriterElement.style.color = colors[0];
+            type();
+
+            // Lógica para a Seta Neon Fixa (Desktop)
+            const fixedArrow = document.getElementById('fixed-neon-arrow');
+            const header = document.getElementById('header');
+            const footer = document.getElementById('footer');
+
+            function handleArrowVisibility() {
+                if (!fixedArrow || !header || !footer) return;
+                if (window.innerWidth < 768) {
+                    if (!fixedArrow.classList.contains('hidden')) {
+                        fixedArrow.classList.add('hidden');
+                    }
+                    return;
+                }
+                const scrollPosition = window.scrollY;
+                const headerBottom = header.offsetHeight;
+                const footerTop = footer.offsetTop;
+                const windowBottom = scrollPosition + window.innerHeight;
+                if (scrollPosition > headerBottom - 100 && windowBottom < footerTop + 100) {
+                    fixedArrow.classList.remove('hidden');
+                } else {
+                    fixedArrow.classList.add('hidden');
+                }
+            }
+            window.addEventListener('scroll', handleArrowVisibility);
+            window.addEventListener('resize', handleArrowVisibility);
+            
+            // --- Lógica do Pop-up de Produto Aleatório ---
+            const products = [
+                {
+                    title: 'Sua Jornada de Fé em Cores: Bíblia Sagrada Ave-Maria Ilustrada',
+                    description: 'Mergulhe na Palavra de Deus com a tradicional Bíblia Ave-Maria, agora em uma belíssima edição com 57 ilustrações que dão vida à História da Salvação.',
+                    image: 'https://m.media-amazon.com/images/I/61UOJ7gTwJL._SY342_.jpg',
+                    link: '#bibliailustrada-avemaria'
+                },
+                {
+                    title: 'Quadros Decorativos: Fortaleça sua Fé e Confiança',
+                    description: 'Transforme qualquer ambiente em um refúgio de esperança. Estes quadros são a companhia perfeita para te lembrar do poder da sua fé.',
+                    image: 'https://m.media-amazon.com/images/I/81GKqcrveIL._AC_SY879_.jpg',
+                    link: '#kit3quadros'
+                },
+                {
+                    title: 'Reze com Poder: Terço de Proteção de São Bento em Hematita',
+                    description: 'Una a força da sua oração à poderosa intercessão de São Bento. Este terço, feito com a solidez da pedra Hematita, é mais que um objeto: é um escudo espiritual.',
+                    image: 'https://m.media-amazon.com/images/I/61LyhzJjcNL._AC_SX679_.jpg',
+                    link: '#tercosaobento'
+                },
+                {
+                    title: 'Ilumine seu Pedido Urgente: Vela 7 Dias de Santa Rita de Cássia',
+                    description: 'Transforme sua oração em um ponto de luz e perseverança. Com a imagem de Santa Rita, esta vela de 7 dias é o símbolo da sua fé que não desiste.',
+                    image: 'https://m.media-amazon.com/images/I/612Qpj8bD6L._AC_SX679_.jpg',
+                    link: '#vela7dias-santarita'
+                }
+            ];
+
+            const productPopup = document.getElementById('product-popup');
+            const popupImg = document.getElementById('popup-img');
+            const popupTitle = document.getElementById('popup-title');
+            const popupDesc = document.getElementById('popup-desc');
+            const popupLink = document.getElementById('popup-link');
+            const popupCloseBtn = document.getElementById('popup-close-btn');
+            const popupContinueBtn = document.getElementById('popup-continue-btn');
+            const popupOverlay = document.getElementById('popup-overlay');
+            let popupShown = false;
+
+            function showPopup() {
+                if (popupShown) return; // Mostra o pop-up apenas uma vez
+                popupShown = true;
+                
+                const randomProduct = products[Math.floor(Math.random() * products.length)];
+                
+                popupImg.src = randomProduct.image;
+                popupTitle.textContent = randomProduct.title;
+                popupDesc.textContent = randomProduct.description;
+                popupLink.href = randomProduct.link;
+                
+                productPopup.classList.remove('hidden');
+                document.body.classList.add('popup-open');
+            }
+
+            function hidePopup() {
+                productPopup.classList.add('hidden');
+                document.body.classList.remove('popup-open');
+            }
+
+            // Define o temporizador para 15 segundos
+            setTimeout(showPopup, 15000);
+
+            // Adiciona eventos para fechar o pop-up
+            popupCloseBtn.addEventListener('click', hidePopup);
+            popupContinueBtn.addEventListener('click', hidePopup);
+            popupOverlay.addEventListener('click', hidePopup);
+        });
+    </script>
+</body>
+</html>
